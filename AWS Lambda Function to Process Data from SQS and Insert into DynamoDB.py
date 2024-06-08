@@ -7,9 +7,9 @@ access_key = "AKIAU6GDX6EDJ5QHKNVN"
 sqs_queue_url = "https://sqs.ap-southeast-2.amazonaws.com/339712930054/testqueue"
 
 # Initialize SQS & DynamoDB client
-sqs = boto3.client('sqs', region_name="ap-southeast-2", aws_access_key_id=access_key, aws_secrepipt_access_key=secret_key)
+sqs = boto3.client('sqs', region_name="ap-southeast-2", aws_access_key_id=access_key, aws_secret_access_key=secret_key)
 dynamodb = boto3.resource('dynamodb', region_name='your-region')
-dynamodb_table = dynamodb.Table('your-dynamodb-table')
+dynamodb_table = dynamodb.Table('stock')
 
 def process_and_store_data():
     # Continuously process and store data
