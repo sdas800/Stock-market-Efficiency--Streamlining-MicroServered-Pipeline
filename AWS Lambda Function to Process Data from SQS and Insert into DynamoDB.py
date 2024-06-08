@@ -1,13 +1,9 @@
 import boto3
 from datetime import datetime
 import time
-import json
-
 # Configuration
 secret_key = "0nTuDPM9IG9aosPFreWFFBUgXUxuoAwsGfT5ypmB"
 access_key = "AKIAU6GDX6EDJ5QHKNVN"
-rapid_api_host = "https://latest-stock-price.p.rapidapi.com/any"
-rapid_api_key = "0c0e291746msh83d095396f0e1e3p1a5710jsn8715e16feff9"
 sqs_queue_url = "https://sqs.ap-southeast-2.amazonaws.com/339712930054/testqueue"
 
 # Initialize SQS & DynamoDB client
