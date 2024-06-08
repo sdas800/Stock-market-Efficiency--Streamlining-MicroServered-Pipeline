@@ -1,31 +1,64 @@
-import json
 import boto3
 from datetime import datetime
+import time
+import json
 
-# Initialize DynamoDB client
+# Configuration
+secret_key = "0nTuDPM9IG9aosPFreWFFBUgXUxuoAwsGfT5ypmB"
+access_key = "AKIAU6GDX6EDJ5QHKNVN"
+rapid_api_host = "https://latest-stock-price.p.rapidapi.com/any"
+rapid_api_key = "0c0e291746msh83d095396f0e1e3p1a5710jsn8715e16feff9"
+sqs_queue_url = "https://sqs.ap-southeast-2.amazonaws.com/339712930054/testqueue"
+
+# Initialize SQS & DynamoDB client
+sqs = boto3.client('sqs', region_name="ap-southeast-2", aws_access_key_id=access_key, aws_secrepipt_access_key=secret_key)
 dynamodb = boto3.resource('dynamodb', region_name='your-region')
-table = dynamodb.Table('your-dynamodb-table')
+dynamodb_table = dynamodb.Table('your-dynamodb-table')
 
+def process_and_store_data():
+    # Continuously process and store data
+    while True:
+        # Receive up to 10 messages from the SQS queue
+        response = sqs.receive_message(
+            QueueUrl=sqs_queue_url,
+            MaxNumberOfMessages=10,
+            WaitTimeSeconds=10
+        )
 
-def lambda_handler(event, context):
-    for record in event['Records']:
-        payload = json.loads(record['body'])
-        process_and_store_data(payload)
+        # Get the messages from the response
+        messages = response.get('Messages', [])
 
+        # Process each message
+        for message in messages:
+            # Get the body of the message
+            body = message['Body']
+            # Parse the stock data from the message body
+            stock_data = dict(item.split(":") for item in body.split(","))
 
-def process_and_store_data(data):
-    stock_price = data['price']
-    stock_high = data['high']
-    stock_low = data['low']
-    timestamp = datetime.now().strftime('%d-%Y-%M %H:%M:%S')
+            # Prepare the item for DynamoDB
+            timestamp = datetime.now().isoformat()
+            dynamodb.put_item(
+                TableName=dynamodb_table,
+                Item={
+                    'Symbol': {'S': stock_data['symbol']},
+                    'Identifier': {'S': stock_data['identifier']},
+                    'Open': {'N': stock_data['open']},
+                    'DayHigh': {'N': stock_data['dayHigh']},
+                    'DayLow': {'N': stock_data['dayLow']},
+                    'LastPrice': {'N': stock_data['lastPrice']},
+                    'PreviousClose': {'N': stock_data['previousClose']},
+                    'Change': {'N': stock_data['change']},
+                    'YearHigh': {'N': stock_data['yearHigh']},
+                    'YearLow': {'N': stock_data['yearLow']},
+                    'Timestamp': {'S': timestamp}
+                }
+            )
 
-    item = {
-        'StockPrice': stock_price,
-        'High': stock_high,
-        'Low': stock_low,
-        'Timestamp': timestamp
-    }
+            # Delete the processed message from the queue
+            sqs.delete_message(
+                QueueUrl=sqs_queue_url,
+                ReceiptHandle=message['ReceiptHandle']
+            )
 
-    table.put_item(Item=item)
-
-    return item
+        # Wait for 1 minute before checking the queue again
+        time.sleep(60)

@@ -11,7 +11,7 @@ rapid_api_url = "https://latest-stock-price.p.rapidapi.com/any"
 querystring = {"Indices": "NIFTY"}
 
 # Initialize SQS client
-sqs = boto3.client('sqs', region_name="ap-southeast-2", aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+sqs = boto3.client('sqs', region_name="ap-southeast-2", aws_access_key_id=access_key, aws_secrepipt_access_key=secret_key)
 
 def fetch_stock_data():
     try:
@@ -71,6 +71,9 @@ def send_to_sqs(data):
         response = sqs.send_message(
             QueueUrl=sqs_queue_url,
             MessageBody=message_body
+
+
+            
         )
     return response
 
